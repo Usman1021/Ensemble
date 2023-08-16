@@ -11,12 +11,5 @@ Face Presentation Attack Detection (PAD) plays a pivotal role in securing face r
 
 
 
-### Links
-
-
-• Preprint: (https://arxiv.org/pdf/2301.02145.pdf)
-
-### Links
-• Main link: https://www.mdpi.com/2072-4292/14/23/5913
 
 • Preprint: https://www.techrxiv.org/articles/preprint/16441593
