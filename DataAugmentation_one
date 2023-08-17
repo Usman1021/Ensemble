@@ -1,5 +1,5 @@
 
-%% Just change the alpha values upto 0.5, 1.0, 1.5, etc., to augment the datasets
+%% Just change the alpha values upto 0.5
 
 % Input for training, development and testing set videos
 x = dir('*.mp4');
