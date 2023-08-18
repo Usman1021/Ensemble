@@ -1,5 +1,5 @@
 % Get a list of video files in the current directory
-videoFiles = dir('*.mp4');
+videoFiles = dir('*.mov');
 
 % Parameters
 segmentSize = 40; % Number of frames in each segment
@@ -49,9 +49,10 @@ for k = 1:numel(videoFiles)
         blended = alpha * stabilizedFrame + (1 - alpha) * currentFrame;
 
         % Save the stabilized segment as an image
+        [~, videoName, ~] = fileparts(videoFileName); % Extract video name
         segmentIndex = ceil(startFrame / segmentSize);
-        outputFileName = strcat('segment', num2str(segmentIndex), '_video', num2str(k), '.jpg');
-        imwrite(blended, outputFileName);
+        outputFileName = strcat(videoName, '_segment', num2str(segmentIndex), '.jpg');
+        imwrite(stabilizedFrame, outputFileName);
     end
 end
 
