@@ -52,7 +52,7 @@ for k = 1:numel(videoFiles)
         [~, videoName, ~] = fileparts(videoFileName); % Extract video name
         segmentIndex = ceil(startFrame / segmentSize);
         outputFileName = strcat(videoName, '_segment', num2str(segmentIndex), '.jpg');
-        imwrite(stabilizedFrame, outputFileName);
+        imwrite(blended, outputFileName);
     end
 end
 
