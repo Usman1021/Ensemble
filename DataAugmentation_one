@@ -1,4 +1,4 @@
-%% For data augmentation, change the value of alpha upto 0.5 for first set, 1.0 for second set and 1.5 for thrid set. 
+%% For data augmentation, change the value of alpha upto 0.5 for first set, 1.0 for second set and 1.5 for thrid set..
 
 % Get a list of video files in the current directory
 videoFiles = dir('*.mov');
