@@ -1,0 +1,69 @@
+# Import necessary libraries
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Function to Convert Transformation to S-R-t Format
+def cvexTformToSRT(H):
+    R = H[0:2, 0:2]
+    t = H[0:2, 2]
+    ang = np.mean([np.arctan2(R[1, 0], R[0, 0]), np.arctan2(-R[0, 1], R[1, 1])])
+    s = np.mean(np.diag(R) / np.cos(ang))
+    R = np.array([[np.cos(ang), -np.sin(ang)], [np.sin(ang), np.cos(ang)]])
+    H = np.vstack((np.hstack((s * R, t.reshape(2, 1))), [0, 0, 1]))
+    return H
+
+# Get a list of video files in the current directory
+import os
+videoFiles = [f for f in os.listdir() if f.endswith('.mov')]
+
+# Parameters
+segmentSize = 40  # Number of frames in each segment
+
+for videoFileName in videoFiles:
+    # Create a video capture object
+    videoFileReader = cv2.VideoCapture(videoFileName)
+
+    # Count the total number of frames in the video
+    numFrames = int(videoFileReader.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    # Initialize variables
+    Hcumulative = np.eye(3)
+
+    for startFrame in range(0, numFrames, segmentSize):
+        endFrame = min(startFrame + segmentSize - 1, numFrames - 1)
+
+        # Initialize stabilizedFrame for this segment
+        ret, stabilizedFrame = videoFileReader.read()
+        stabilizedFrame = np.zeros_like(stabilizedFrame, dtype=np.float64)
+
+        for i in range(startFrame, endFrame + 1):
+            ret, currentFrame = videoFileReader.read()
+
+            if ret:  # Check if the frame is valid
+                if i > startFrame:
+                    if currentFrame.shape != stabilizedFrame.shape:
+                        continue  # Skip frames with different sizes
+
+                    H = cvexEstStabilizationTform(imgA, currentFrame)
+                    HsRt = cvexTformToSRT(H)
+                    Hcumulative = np.dot(HsRt, Hcumulative)
+
+                    img = cv2.warpAffine(currentFrame, Hcumulative[0:2, :], (currentFrame.shape[1], currentFrame.shape[0]))
+                    stabilizedFrame = stabilizedFrame + img
+
+                imgA = currentFrame
+
+        if endFrame >= startFrame:  # Ensure there's at least one valid frame
+            stabilizedFrame = stabilizedFrame / (endFrame - startFrame + 1)
+
+            # Save the stabilized segment as an image
+            videoName, _ = os.path.splitext(videoFileName)
+            segmentIndex = startFrame // segmentSize + 1
+            outputFileName = f"{videoName}_{segmentIndex}.jpg"
+            cv2.imwrite(outputFileName, stabilizedFrame)
+
+    # Release the video capture object
+    videoFileReader.release()
+
+print("Processing complete.")
