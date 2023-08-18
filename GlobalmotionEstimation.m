@@ -1,71 +1,86 @@
-%% Global Motion estimation learning
-% Input for training, development and testing set videos
-x = dir('*.mp4');
-[length temp] = size(x);
-for k=1:length
-    videoname = x(k).name;
-    videoFileReader = vision.VideoFileReader(videoname);
+% Get a list of video files in the current directory
+videoFiles = dir('*.mp4');
 
+% Parameters
+segmentSize = 40; % Number of frames in each segment
+
+for k = 1:numel(videoFiles)
+    videoFileName = videoFiles(k).name;
+    
+    % Create a video file reader
+    videoFileReader = vision.VideoFileReader(videoFileName);
+    
+    % Count the total number of frames in the video
     numFrames = 0;
     while ~isDone(videoFileReader)
         step(videoFileReader);
         numFrames = numFrames + 1;
     end
-
-    reset(videoFileReader);                   
-    movMean = step(videoFileReader);
-    imgB = movMean;
-    imgBp = imgB;
-    correctedMean = imgBp;
-    % set the video length 
-    range = 40:40:numFrames;
+    reset(videoFileReader); % Reset the video file reader
+    
+    % Initialize variables
     Hcumulative = eye(3);
-    for i=1:size(range,2)
-        ii=range(i);
-        ref=ii;
-        while ~isDone(videoFileReader) && ii < ref + 40
-            imgA = imgB; 
-            imgAp = imgBp;
-            imgB = step(videoFileReader);
-         % Estimate transform from frame A to frame B, and fit as an s-R-t
-            H = cvexEstStabilizationTform1(imgA,imgB);
-            HsRt = cvexTformToSRT(H);
-            Hcumulative = HsRt * Hcumulative;
-            img = imwarp(imgB,rigid2d(Hcumulative),'OutputView',imref2d(size(imgB)));
-             correctedMean = correctedMean + img;
-            ii = ii+1;
+
+    for startFrame = 1:segmentSize:numFrames
+        endFrame = min(startFrame + segmentSize - 1, numFrames);
+
+        % Initialize stabilizedFrame for this segment
+        stabilizedFrame = zeros(size(step(videoFileReader)));
+
+        for i = startFrame:endFrame
+            currentFrame = step(videoFileReader);
+
+            if i > startFrame
+                % Estimate and apply transformation for stabilization
+                H = cvexEstStabilizationTform(imgA, currentFrame);
+                HsRt = cvexTformToSRT(H);
+                Hcumulative = HsRt * Hcumulative;
+
+                % Warp the frame using the accumulated transformation
+                img = imwarp(currentFrame, rigid2d(Hcumulative), 'OutputView', imref2d(size(currentFrame)));
+                stabilizedFrame = stabilizedFrame + img;
+            end
+
+            imgA = currentFrame; % Store previous frame
         end
-        correctedMean = correctedMean/(40);
-          alpha = 0.1;
-           blended = alpha *  correctedMean + (1 - alpha) * imgB;
-        imwrite(blended,strcat( string(k), string(i),'.jpg'));
+
+        stabilizedFrame = stabilizedFrame / (endFrame - startFrame + 1);
+        alpha = 0.1;
+        blended = alpha * stabilizedFrame + (1 - alpha) * currentFrame;
+
+        % Save the stabilized segment as an image
+        segmentIndex = ceil(startFrame / segmentSize);
+        outputFileName = strcat('segment', num2str(segmentIndex), '_video', num2str(k), '.jpg');
+        imwrite(blended, outputFileName);
     end
 end
-%%
-function H = cvexEstStabilizationTform1(leftI,rightI,ptThresh)
-ptThresh = 0.1;
-leftI = im2gray(leftI);
-rightI = im2gray(rightI);
 
-pointsA = detectFASTFeatures(leftI, 'MinContrast', ptThresh);
-pointsB = detectFASTFeatures(rightI, 'MinContrast', ptThresh);
-% Extract FREAK descriptors for the corners
-[featuresA, pointsA] = extractFeatures(leftI, pointsA);
-[featuresB, pointsB] = extractFeatures(rightI, pointsB);
+%% Function to Estimate Stabilization Transformation
+function H = cvexEstStabilizationTform(imgA, imgB)
+ptThresh = 0.1;
+imgA = im2gray(imgA);
+imgB = im2gray(imgB);
+
+pointsA = detectFASTFeatures(imgA, 'MinContrast', ptThresh);
+pointsB = detectFASTFeatures(imgB, 'MinContrast', ptThresh);
+
+[featuresA, pointsA] = extractFeatures(imgA, pointsA);
+[featuresB, pointsB] = extractFeatures(imgB, pointsB);
+
 indexPairs = matchFeatures(featuresA, featuresB);
 pointsA = pointsA(indexPairs(:, 1), :);
 pointsB = pointsB(indexPairs(:, 2), :);
-% Estimating Transform
+
 [tform, ~, ~, status] = estimateGeometricTransform(pointsB, pointsA, 'rigid');
 H = tform.T;
 end
-%%
-function [H,s,ang,t,R] = cvexTformToSRT(H)
-R = H(1:2,1:2);
+
+%% Function to Convert Transformation to S-R-t Format
+function [H, s, ang, t, R] = cvexTformToSRT(H)
+R = H(1:2, 1:2);
 t = H(3, 1:2);
-ang = mean([atan2(R(2),R(1)) atan2(-R(3),R(4))]);
-s = mean(R([1 4])/cos(ang));
-% Reconstitute new s-R-t transform:
-R = [cos(ang) -sin(ang); sin(ang) cos(ang)];
-H = [[s*R; t], [0 0 1]'];
+ang = mean([atan2(R(2), R(1)), atan2(-R(3), R(4))]);
+s = mean(R([1 4]) / cos(ang));
+R = [cos(ang), -sin(ang); sin(ang), cos(ang)];
+H = [[s * R; t], [0 0 1]'];
 end
