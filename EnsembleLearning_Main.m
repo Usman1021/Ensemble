@@ -4,18 +4,18 @@ close all
 clc
 %% Model 1
 % Training set input
-rootFolder = fullfile('data augmentation 1 for icm dataset');
+rootFolder = fullfile('F:\ICM trainingset');
 categories  = {'real','attack'};
 trainingset1 = imageDatastore(fullfile(rootFolder, categories), 'IncludeSubfolders',true, ...
  'LabelSource','foldernames');
 tbl = countEachLabel(trainingset1);
 %% Input for development set 
-rootFolder = fullfile('F:\Ensemble learning for icm testing');
+rootFolder = fullfile('F:\CM testingset');
 categories  = {'real','attack'};
 developmentset1 = imageDatastore(fullfile(rootFolder, categories), 'IncludeSubfolders',true, ...
  'LabelSource','foldernames'); 
 %% Input for Testing set 
-rootFolder = fullfile('F:\Ensemble learning for oulu testing set');
+rootFolder = fullfile('F:\OULU testing set');
 categories = {'real','attack'};
 testingsetdata1 = imageDatastore(fullfile(rootFolder, categories),  'IncludeSubfolders',true, ...
  'LabelSource','foldernames');
@@ -150,18 +150,18 @@ hold on
 %  
  %%  Model 2
  % input for training set
-rootFolder = fullfile('data augmentation 2 for icm dataset');
+rootFolder = fullfile('F:\IICM_TRAININGSET_0.5');
 categories  = {'real','attack'};
 trainingset2 = imageDatastore(fullfile(rootFolder, categories), 'IncludeSubfolders',true, ...
  'LabelSource','foldernames');
 tbl = countEachLabel(trainingset2);
 %% Input for development set 
-rootFolder = fullfile('F:\Ensemble learning for icm testing');
+rootFolder = fullfile('F:\ICM testingset');
 categories  = {'real','attack'};
 developmentset2 = imageDatastore(fullfile(rootFolder, categories), 'IncludeSubfolders',true, ...
  'LabelSource','foldernames'); 
 %% Input for Testing set 
-rootFolder = fullfile('F:\Ensemble learning for oulu testing set');
+rootFolder = fullfile('F:\Oulu testing set');
 categories = {'real','attack'};
 testingsetdata2 = imageDatastore(fullfile(rootFolder, categories),  'IncludeSubfolders',true, ...
  'LabelSource','foldernames');
@@ -294,18 +294,18 @@ AUC2
  hold on
  
   %% Model 3
-rootFolder = fullfile('data augmentation 3 for icm dataset');
+rootFolder = fullfile('I'F:\CM_trainingset_1.5');
 categories  = {'real','attack'};
 trainingset3 = imageDatastore(fullfile(rootFolder, categories), 'IncludeSubfolders',true, ...
  'LabelSource','foldernames');
 tbl = countEachLabel(trainingset3);
 %% Input for development set 
-rootFolder = fullfile('F:\Ensemble learning for icm testing');
+rootFolder = fullfile('F:\ICM testingsettesting');
 categories  = {'real','attack'};
 developmentset3= imageDatastore(fullfile(rootFolder, categories), 'IncludeSubfolders',true, ...
  'LabelSource','foldernames'); 
 %% Input for Testing set 
-rootFolder = fullfile('F:\Ensemble learning for oulu testing set');
+rootFolder = fullfile('F:\Oulu testing set');
 categories = {'real','attack'};
 testingsetdata3 = imageDatastore(fullfile(rootFolder, categories),  'IncludeSubfolders',true, ...
  'LabelSource','foldernames');
@@ -443,10 +443,7 @@ AUC3
 % stacking ensemble learning
  % META-MODEL LEARNING (GRU)
 Developementscore = horzcat(devlpscores1,  devlpscores2, devlpscores3);
-% Developementscore =  devlpscores1 +  devlpscores2 +  devlpscores3;
 finaltestscores  = horzcat(testscores1,  testscores2, testscores3);
-% finaltestscores = testscores1 + testscores2 + testscores3;
-
 
 rng(1) % For reproducibility
 trainf = {};
