@@ -4,7 +4,7 @@ close all
 clc
 %% Model 1
 % Training set input
-rootFolder = fullfile('F:\ICM trainingset');
+rootFolder = fullfile('F:\ICM trainingset_0.5');
 categories  = {'real','attack'};
 trainingset1 = imageDatastore(fullfile(rootFolder, categories), 'IncludeSubfolders',true, ...
  'LabelSource','foldernames');
@@ -150,7 +150,7 @@ hold on
 %  
  %%  Model 2
  % input for training set
-rootFolder = fullfile('F:\IICM_TRAININGSET_0.5');
+rootFolder = fullfile('F:\IICM_TRAININGSET_1.0');
 categories  = {'real','attack'};
 trainingset2 = imageDatastore(fullfile(rootFolder, categories), 'IncludeSubfolders',true, ...
  'LabelSource','foldernames');
